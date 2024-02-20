@@ -47,10 +47,11 @@
 #include "tree.h"
 
 static int r_open(struct inode *inode, struct file *file,
-					const struct seq_operations *op)
+				  const struct seq_operations *op)
 {
 	int ret = seq_open(file, op);
-	if (!ret) {
+	if (!ret)
+	{
 		struct seq_file *m = (struct seq_file *)file->private_data;
 		m->private = inode->i_private;
 	}
@@ -80,8 +81,8 @@ static int show_rcubarrier(struct seq_file *m, void *v)
 {
 	struct rcu_state *rsp = (struct rcu_state *)m->private;
 	seq_printf(m, "bcc: %d nbd: %lu\n",
-		   atomic_read(&rsp->barrier_cpu_count),
-		   rsp->n_barrier_done);
+			   atomic_read(&rsp->barrier_cpu_count),
+			   rsp->n_barrier_done);
 	return 0;
 }
 
@@ -116,39 +117,39 @@ static void print_one_rcu_data(struct seq_file *m, struct rcu_data *rdp)
 	if (!rdp->beenonline)
 		return;
 	seq_printf(m, "%3d%cc=%ld g=%ld pq=%d qp=%d",
-		   rdp->cpu,
-		   cpu_is_offline(rdp->cpu) ? '!' : ' ',
-		   ulong2long(rdp->completed), ulong2long(rdp->gpnum),
-		   rdp->passed_quiesce, rdp->qs_pending);
+			   rdp->cpu,
+			   cpu_is_offline(rdp->cpu) ? '!' : ' ',
+			   ulong2long(rdp->completed), ulong2long(rdp->gpnum),
+			   rdp->passed_quiesce, rdp->qs_pending);
 	seq_printf(m, " dt=%d/%llx/%d df=%lu",
-		   atomic_read(&rdp->dynticks->dynticks),
-		   rdp->dynticks->dynticks_nesting,
-		   rdp->dynticks->dynticks_nmi_nesting,
-		   rdp->dynticks_fqs);
+			   atomic_read(&rdp->dynticks->dynticks),
+			   rdp->dynticks->dynticks_nesting,
+			   rdp->dynticks->dynticks_nmi_nesting,
+			   rdp->dynticks_fqs);
 	seq_printf(m, " of=%lu", rdp->offline_fqs);
 	rcu_nocb_q_lengths(rdp, &ql, &qll);
 	qll += rdp->qlen_lazy;
 	ql += rdp->qlen;
 	seq_printf(m, " ql=%ld/%ld qs=%c%c%c%c",
-		   qll, ql,
-		   ".N"[rdp->nxttail[RCU_NEXT_READY_TAIL] !=
-			rdp->nxttail[RCU_NEXT_TAIL]],
-		   ".R"[rdp->nxttail[RCU_WAIT_TAIL] !=
-			rdp->nxttail[RCU_NEXT_READY_TAIL]],
-		   ".W"[rdp->nxttail[RCU_DONE_TAIL] !=
-			rdp->nxttail[RCU_WAIT_TAIL]],
-		   ".D"[&rdp->nxtlist != rdp->nxttail[RCU_DONE_TAIL]]);
+			   qll, ql,
+			   ".N"[rdp->nxttail[RCU_NEXT_READY_TAIL] !=
+					rdp->nxttail[RCU_NEXT_TAIL]],
+			   ".R"[rdp->nxttail[RCU_WAIT_TAIL] !=
+					rdp->nxttail[RCU_NEXT_READY_TAIL]],
+			   ".W"[rdp->nxttail[RCU_DONE_TAIL] !=
+					rdp->nxttail[RCU_WAIT_TAIL]],
+			   ".D"[&rdp->nxtlist != rdp->nxttail[RCU_DONE_TAIL]]);
 #ifdef CONFIG_RCU_BOOST
 	seq_printf(m, " kt=%d/%c ktl=%x",
-		   per_cpu(rcu_cpu_has_work, rdp->cpu),
-		   convert_kthread_status(per_cpu(rcu_cpu_kthread_status,
-					  rdp->cpu)),
-		   per_cpu(rcu_cpu_kthread_loops, rdp->cpu) & 0xffff);
+			   per_cpu(rcu_cpu_has_work, rdp->cpu),
+			   convert_kthread_status(per_cpu(rcu_cpu_kthread_status,
+											  rdp->cpu)),
+			   per_cpu(rcu_cpu_kthread_loops, rdp->cpu) & 0xffff);
 #endif /* #ifdef CONFIG_RCU_BOOST */
 	seq_printf(m, " b=%ld", rdp->blimit);
 	seq_printf(m, " ci=%lu nci=%lu co=%lu ca=%lu\n",
-		   rdp->n_cbs_invoked, rdp->n_nocbs_invoked,
-		   rdp->n_cbs_orphaned, rdp->n_cbs_adopted);
+			   rdp->n_cbs_invoked, rdp->n_nocbs_invoked,
+			   rdp->n_cbs_orphaned, rdp->n_cbs_adopted);
 }
 
 static int show_rcudata(struct seq_file *m, void *v)
@@ -159,9 +160,9 @@ static int show_rcudata(struct seq_file *m, void *v)
 
 static const struct seq_operations rcudate_op = {
 	.start = r_start,
-	.next  = r_next,
-	.stop  = r_stop,
-	.show  = show_rcudata,
+	.next = r_next,
+	.stop = r_stop,
+	.show = show_rcudata,
 };
 
 static int rcudata_open(struct inode *inode, struct file *file)
@@ -182,17 +183,17 @@ static int show_rcuexp(struct seq_file *m, void *v)
 	struct rcu_state *rsp = (struct rcu_state *)m->private;
 
 	seq_printf(m, "s=%lu d=%lu w=%lu tf=%lu wd1=%lu wd2=%lu n=%lu sc=%lu dt=%lu dl=%lu dx=%lu\n",
-		   atomic_long_read(&rsp->expedited_start),
-		   atomic_long_read(&rsp->expedited_done),
-		   atomic_long_read(&rsp->expedited_wrap),
-		   atomic_long_read(&rsp->expedited_tryfail),
-		   atomic_long_read(&rsp->expedited_workdone1),
-		   atomic_long_read(&rsp->expedited_workdone2),
-		   atomic_long_read(&rsp->expedited_normal),
-		   atomic_long_read(&rsp->expedited_stoppedcpus),
-		   atomic_long_read(&rsp->expedited_done_tries),
-		   atomic_long_read(&rsp->expedited_done_lost),
-		   atomic_long_read(&rsp->expedited_done_exit));
+			   atomic_long_read(&rsp->expedited_start),
+			   atomic_long_read(&rsp->expedited_done),
+			   atomic_long_read(&rsp->expedited_wrap),
+			   atomic_long_read(&rsp->expedited_tryfail),
+			   atomic_long_read(&rsp->expedited_workdone1),
+			   atomic_long_read(&rsp->expedited_workdone2),
+			   atomic_long_read(&rsp->expedited_normal),
+			   atomic_long_read(&rsp->expedited_stoppedcpus),
+			   atomic_long_read(&rsp->expedited_done_tries),
+			   atomic_long_read(&rsp->expedited_done_lost),
+			   atomic_long_read(&rsp->expedited_done_exit));
 	return 0;
 }
 
@@ -214,24 +215,24 @@ static const struct file_operations rcuexp_fops = {
 static void print_one_rcu_node_boost(struct seq_file *m, struct rcu_node *rnp)
 {
 	seq_printf(m, "%d:%d tasks=%c%c%c%c kt=%c ntb=%lu neb=%lu nnb=%lu ",
-		   rnp->grplo, rnp->grphi,
-		   "T."[list_empty(&rnp->blkd_tasks)],
-		   "N."[!rnp->gp_tasks],
-		   "E."[!rnp->exp_tasks],
-		   "B."[!rnp->boost_tasks],
-		   convert_kthread_status(rnp->boost_kthread_status),
-		   rnp->n_tasks_boosted, rnp->n_exp_boosts,
-		   rnp->n_normal_boosts);
+			   rnp->grplo, rnp->grphi,
+			   "T."[list_empty(&rnp->blkd_tasks)],
+			   "N."[!rnp->gp_tasks],
+			   "E."[!rnp->exp_tasks],
+			   "B."[!rnp->boost_tasks],
+			   convert_kthread_status(rnp->boost_kthread_status),
+			   rnp -> n_tasks_boosted, rnp -> n_exp_boosts,
+			   rnp -> n_normal_boosts);
 	seq_printf(m, "j=%04x bt=%04x\n",
-		   (int)(jiffies & 0xffff),
-		   (int)(rnp->boost_time & 0xffff));
+			   (int)(jiffies & 0xffff),
+			   (int)(rnp->boost_time & 0xffff));
 	seq_printf(m, "    balk: nt=%lu egt=%lu bt=%lu nb=%lu ny=%lu nos=%lu\n",
-		   rnp->n_balk_blkd_tasks,
-		   rnp->n_balk_exp_gp_tasks,
-		   rnp->n_balk_boost_tasks,
-		   rnp->n_balk_notblocked,
-		   rnp->n_balk_notyet,
-		   rnp->n_balk_nos);
+			   rnp->n_balk_blkd_tasks,
+			   rnp->n_balk_exp_gp_tasks,
+			   rnp->n_balk_boost_tasks,
+			   rnp->n_balk_notblocked,
+			   rnp->n_balk_notyet,
+			   rnp->n_balk_nos);
 }
 
 static int show_rcu_node_boost(struct seq_file *m, void *unused)
@@ -266,25 +267,27 @@ static void print_one_rcu_state(struct seq_file *m, struct rcu_state *rsp)
 
 	gpnum = rsp->gpnum;
 	seq_printf(m, "c=%ld g=%ld s=%d jfq=%ld j=%x ",
-		   ulong2long(rsp->completed), ulong2long(gpnum),
-		   rsp->fqs_state,
-		   (long)(rsp->jiffies_force_qs - jiffies),
-		   (int)(jiffies & 0xffff));
+			   ulong2long(rsp->completed), ulong2long(gpnum),
+			   rsp->fqs_state,
+			   (long)(rsp->jiffies_force_qs - jiffies),
+			   (int)(jiffies & 0xffff));
 	seq_printf(m, "nfqs=%lu/nfqsng=%lu(%lu) fqlh=%lu oqlen=%ld/%ld\n",
-		   rsp->n_force_qs, rsp->n_force_qs_ngp,
-		   rsp->n_force_qs - rsp->n_force_qs_ngp,
-		   rsp->n_force_qs_lh, rsp->qlen_lazy, rsp->qlen);
-	for (rnp = &rsp->node[0]; rnp - &rsp->node[0] < rcu_num_nodes; rnp++) {
-		if (rnp->level != level) {
+			   rsp->n_force_qs, rsp->n_force_qs_ngp,
+			   rsp->n_force_qs - rsp->n_force_qs_ngp,
+			   rsp->n_force_qs_lh, rsp->qlen_lazy, rsp->qlen);
+	for (rnp = &rsp->node[0]; rnp - &rsp->node[0] < rcu_num_nodes; rnp++)
+	{
+		if (rnp->level != level)
+		{
 			seq_puts(m, "\n");
 			level = rnp->level;
 		}
 		seq_printf(m, "%lx/%lx %c%c>%c %d:%d ^%d    ",
-			   rnp->qsmask, rnp->qsmaskinit,
-			   ".G"[rnp->gp_tasks != NULL],
-			   ".E"[rnp->exp_tasks != NULL],
-			   ".T"[!list_empty(&rnp->blkd_tasks)],
-			   rnp->grplo, rnp->grphi, rnp->grpnum);
+				   rnp->qsmask, rnp->qsmaskinit,
+				   ".G"[rnp->gp_tasks != NULL],
+				   ".E"[rnp->exp_tasks != NULL],
+				   ".T"[!list_empty(&rnp->blkd_tasks)],
+				   rnp -> grplo, rnp -> grphi, rnp -> grpnum);
 	}
 	seq_puts(m, "\n");
 }
@@ -328,7 +331,7 @@ static void show_one_rcugp(struct seq_file *m, struct rcu_state *rsp)
 	gpmax = rsp->gp_max;
 	raw_spin_unlock_irqrestore(&rnp->lock, flags);
 	seq_printf(m, "completed=%ld  gpnum=%ld  age=%ld  max=%ld\n",
-		   ulong2long(completed), ulong2long(gpnum), gpage, gpmax);
+			   ulong2long(completed), ulong2long(gpnum), gpage, gpmax);
 }
 
 static int show_rcugp(struct seq_file *m, void *v)
@@ -356,18 +359,19 @@ static void print_one_rcu_pending(struct seq_file *m, struct rcu_data *rdp)
 	if (!rdp->beenonline)
 		return;
 	seq_printf(m, "%3d%cnp=%ld ",
-		   rdp->cpu,
-		   cpu_is_offline(rdp->cpu) ? '!' : ' ',
-		   rdp->n_rcu_pending);
+			   rdp->cpu,
+			   cpu_is_offline(rdp->cpu) ? '!' : ' ',
+			   rdp->n_rcu_pending);
 	seq_printf(m, "qsp=%ld rpq=%ld cbr=%ld cng=%ld ",
-		   rdp->n_rp_qs_pending,
-		   rdp->n_rp_report_qs,
-		   rdp->n_rp_cb_ready,
-		   rdp->n_rp_cpu_needs_gp);
-	seq_printf(m, "gpc=%ld gps=%ld nn=%ld\n",
-		   rdp->n_rp_gp_completed,
-		   rdp->n_rp_gp_started,
-		   rdp->n_rp_need_nothing);
+			   rdp->n_rp_qs_pending,
+			   rdp->n_rp_report_qs,
+			   rdp->n_rp_cb_ready,
+			   rdp->n_rp_cpu_needs_gp);
+	seq_printf(m, "gpc=%ld gps=%ld nn=%ld ndw%ld\n",
+			   rdp->n_rp_gp_completed,
+			   rdp->n_rp_gp_started,
+			   rdp->n_rp_nocb_defer_wakeup,
+			   rdp->n_rp_need_nothing);
 }
 
 static int show_rcu_pending(struct seq_file *m, void *v)
@@ -378,9 +382,9 @@ static int show_rcu_pending(struct seq_file *m, void *v)
 
 static const struct seq_operations rcu_pending_op = {
 	.start = r_start,
-	.next  = r_next,
-	.stop  = r_stop,
-	.show  = show_rcu_pending,
+	.next = r_next,
+	.stop = r_stop,
+	.show = show_rcu_pending,
 };
 
 static int rcu_pending_open(struct inode *inode, struct file *file)
@@ -399,10 +403,10 @@ static const struct file_operations rcu_pending_fops = {
 static int show_rcutorture(struct seq_file *m, void *unused)
 {
 	seq_printf(m, "rcutorture test sequence: %lu %s\n",
-		   rcutorture_testseq >> 1,
-		   (rcutorture_testseq & 0x1) ? "(test in progress)" : "");
+			   rcutorture_testseq >> 1,
+			   (rcutorture_testseq & 0x1) ? "(test in progress)" : "");
 	seq_printf(m, "rcutorture update version number: %lu\n",
-		   rcutorture_vernum);
+			   rcutorture_vernum);
 	return 0;
 }
 
@@ -431,53 +435,55 @@ static int __init rcutree_trace_init(void)
 	if (!rcudir)
 		goto free_out;
 
-	for_each_rcu_flavor(rsp) {
+	for_each_rcu_flavor(rsp)
+	{
 		rspdir = debugfs_create_dir(rsp->name, rcudir);
 		if (!rspdir)
 			goto free_out;
 
 		retval = debugfs_create_file("rcudata", 0444,
-				rspdir, rsp, &rcudata_fops);
+									 rspdir, rsp, &rcudata_fops);
 		if (!retval)
 			goto free_out;
 
 		retval = debugfs_create_file("rcuexp", 0444,
-				rspdir, rsp, &rcuexp_fops);
+									 rspdir, rsp, &rcuexp_fops);
 		if (!retval)
 			goto free_out;
 
 		retval = debugfs_create_file("rcu_pending", 0444,
-				rspdir, rsp, &rcu_pending_fops);
+									 rspdir, rsp, &rcu_pending_fops);
 		if (!retval)
 			goto free_out;
 
 		retval = debugfs_create_file("rcubarrier", 0444,
-				rspdir, rsp, &rcubarrier_fops);
+									 rspdir, rsp, &rcubarrier_fops);
 		if (!retval)
 			goto free_out;
 
 #ifdef CONFIG_RCU_BOOST
-		if (rsp == &rcu_preempt_state) {
+		if (rsp == &rcu_preempt_state)
+		{
 			retval = debugfs_create_file("rcuboost", 0444,
-				rspdir, NULL, &rcu_node_boost_fops);
+										 rspdir, NULL, &rcu_node_boost_fops);
 			if (!retval)
 				goto free_out;
 		}
 #endif
 
 		retval = debugfs_create_file("rcugp", 0444,
-				rspdir, rsp, &rcugp_fops);
+									 rspdir, rsp, &rcugp_fops);
 		if (!retval)
 			goto free_out;
 
 		retval = debugfs_create_file("rcuhier", 0444,
-				rspdir, rsp, &rcuhier_fops);
+									 rspdir, rsp, &rcuhier_fops);
 		if (!retval)
 			goto free_out;
 	}
 
 	retval = debugfs_create_file("rcutorture", 0444, rcudir,
-						NULL, &rcutorture_fops);
+								 NULL, &rcutorture_fops);
 	if (!retval)
 		goto free_out;
 	return 0;
@@ -490,7 +496,6 @@ static void __exit rcutree_trace_cleanup(void)
 {
 	debugfs_remove_recursive(rcudir);
 }
-
 
 module_init(rcutree_trace_init);
 module_exit(rcutree_trace_cleanup);
